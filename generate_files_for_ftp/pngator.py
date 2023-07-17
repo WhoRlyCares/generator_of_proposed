@@ -37,18 +37,16 @@ class PngExamples:
         s = [[int(c) for c in row] for row in s]
 
         w = png.Writer(len(s[0]), len(s), greyscale=True, bitdepth=1)
-        f = open(fpath, 'wb')
-        w.write(f, s)
-        f.close()
+        with open(fpath, 'wb') as f:
+            w.write(f, s)
 
     @staticmethod
     def swatch(fpath="./output/swatch.png"):
         p = [(255, 0, 0, 0, 255, 0, 0, 0, 255),
              (128, 0, 0, 0, 128, 0, 0, 0, 128)]
-        f = open(fpath, 'wb')
-        w = png.Writer(3, 2, greyscale=False)
-        w.write(f, p)
-        f.close()
+        with open(fpath, 'wb') as f:
+            w = png.Writer(3, 2, greyscale=False)
+            w.write(f, p)
 
 class SvgWrEx:
     def __init__(self):
@@ -82,8 +80,6 @@ class SvgWrEx:
 
 
 
-if __name__=="__main__":
-    pass
     #PngExamples.gradient()
     #PngExamples.from_binary()
     #PngExamples.swatch()

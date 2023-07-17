@@ -40,7 +40,7 @@ class FTPSource:
         self.ensure_default_dirs(cfg)
 
     @staticmethod
-    def join_cfg_paths(cfg:Config, local_out:str, local_in=None)->str:
+    def join_cfg_paths(cfg:Config, local_out:str, local_in=None) -> str:
         """
         JOIN paths act as defined in Config and relative to os.cwd
         :param cfg: Config instance
@@ -52,18 +52,18 @@ class FTPSource:
         if not local_in:
             local_in = cfg.LOCAL_IN
         if local_out.startswith('/') or local_out.startswith(os.sep):
-            if cfg.LOCAL_OUT.endswith('/') or cfg.LOCAL_OUT.endswith(os.sep):
-                dir_path = (cfg.LOCAL_OUT + local_out[1:])
-            else:
-                dir_path = (cfg.LOCAL_OUT + local_out)
+            return (
+                (cfg.LOCAL_OUT + local_out[1:])
+                if cfg.LOCAL_OUT.endswith('/') or cfg.LOCAL_OUT.endswith(os.sep)
+                else (cfg.LOCAL_OUT + local_out)
+            )
         elif cfg.LOCAL_OUT.endswith('/') or cfg.LOCAL_OUT.endswith(os.sep):
-            dir_path = (cfg.LOCAL_OUT + local_out)
+            return (cfg.LOCAL_OUT + local_out)
         else:
-            dir_path = (cfg.LOCAL_OUT + '/' + local_out)
-        return dir_path
+            return f'{cfg.LOCAL_OUT}/{local_out}'
 
     @staticmethod
-    def resolve_diez(cfg:Config, pstr:str, dt=None) ->str:
+    def resolve_diez(cfg:Config, pstr:str, dt=None) -> str:
         """
         #YYMMDD in str --> to dt.parts as formated.
         :param cfg:  Config instance, for fetching defaults
@@ -73,38 +73,35 @@ class FTPSource:
         """
         if not dt:
             dt = datetime.now()
-        if '#' in pstr:
-            diez_idx =pstr.find("#")
-            next_sep = pstr.find("/",diez_idx)
-            if next_sep == -1:
-                remaining_str = pstr[diez_idx:]
-                format = FTPSource.diezYMD_notation_to_stf(remaining_str)
-                res = pstr[:diez_idx] + dt.strftime(format)
-            else:
-                remaining_str = pstr[diez_idx:next_sep]
-                format = FTPSource.diezYMD_notation_to_stf(remaining_str)
-                res = pstr[:diez_idx] + dt.strftime(format) + pstr[next_sep:]
-            return res
-        else:
+        if '#' not in pstr:
             return pstr
+        diez_idx =pstr.find("#")
+        next_sep = pstr.find("/",diez_idx)
+        if next_sep == -1:
+            remaining_str = pstr[diez_idx:]
+            format = FTPSource.diezYMD_notation_to_stf(remaining_str)
+            return pstr[:diez_idx] + dt.strftime(format)
+        else:
+            remaining_str = pstr[diez_idx:next_sep]
+            format = FTPSource.diezYMD_notation_to_stf(remaining_str)
+            return pstr[:diez_idx] + dt.strftime(format) + pstr[next_sep:]
 
     @staticmethod
-    def diezYMD_notation_to_stf(s: str)->str:
+    def diezYMD_notation_to_stf(s: str) -> str:
         """
         #YYMMDD -> stftime notation in laziest way possible
         :param s: string to reformat, must start with #
         :return: format string compatible with strftime
         """
-        if s.startswith("#"):
-            tmp2 = s.upper()
-            tmp1 = tmp2.replace("YYYY","%Y")
-            tmp2 = tmp1.replace("YY", "%y")
-            tmp1 = tmp2.replace("MM", "%m")
-            tmp2 = tmp1.replace("MMMM", "%b")
-            tmp1 = tmp2.replace("DD", "%d")
-            return tmp1[1:]
-        else:
+        if not s.startswith("#"):
             raise ValueError(f"Expected string, starting with #. Got {s}")
+        tmp2 = s.upper()
+        tmp1 = tmp2.replace("YYYY","%Y")
+        tmp2 = tmp1.replace("YY", "%y")
+        tmp1 = tmp2.replace("MM", "%m")
+        tmp2 = tmp1.replace("MMMM", "%b")
+        tmp1 = tmp2.replace("DD", "%d")
+        return tmp1[1:]
 
     def ensure_default_dirs(self,cfg: Config):
         os.makedirs(cfg.LOCAL_IN, exist_ok=True)
@@ -147,12 +144,11 @@ class FTPSource:
 
 
     def generate_ftp_f(self, p2dir:str, ftype, fpd:int):
-        idx = -1
         clr = self.color_from_path(p2dir)
-        for i, subs in enumerate(self.cfg.DEFAULT_TREE):
-            if subs in p2dir:
-                idx = i
-                break
+        idx = next(
+            (i for i, subs in enumerate(self.cfg.DEFAULT_TREE) if subs in p2dir),
+            -1,
+        )
         if idx == -1:
             print(f"Masks not defined for {p2dir}, aborting")
             return None
@@ -162,7 +158,7 @@ class FTPSource:
         for _ in range(fpd):
             mask = random.choice(masks)
             fname = FTPSource.resolve_wildcards(mask)
-            rel_path = (p2dir + fname) if p2dir.endswith('/') else (p2dir + '/' + fname)
+            rel_path = p2dir + fname if p2dir.endswith('/') else f'{p2dir}/{fname}'
             FTPSource.writen_b_noise_to(rel_path)
             gen_f = GeneratedFile(self.cfg, rel_path, clr, FTPSource.writen_b_noise_to)
             self.created_files.append(gen_f)
@@ -174,9 +170,12 @@ class FTPSource:
         print(f"{p2dir} is arch")
 
 
-    def color_from_path(self, p2dir:str)->str:
-        color = 'orange' if not p2dir in self.cfg.colormap.keys() else self.cfg.colormap.get(p2dir)
-        return color
+    def color_from_path(self, p2dir:str) -> str:
+        return (
+            'orange'
+            if p2dir not in self.cfg.colormap.keys()
+            else self.cfg.colormap.get(p2dir)
+        )
 
 
     @staticmethod
@@ -205,12 +204,12 @@ class FTPSource:
 
 
     @staticmethod
-    def is_exch(pstr:str)->bool:
-        return True if 'exch' in pstr else False
+    def is_exch(pstr:str) -> bool:
+        return 'exch' in pstr
 
     @staticmethod
-    def is_arch(pstr:str)->bool:
-        return True if 'arch' in pstr else False
+    def is_arch(pstr:str) -> bool:
+        return 'arch' in pstr
 
 
 
@@ -221,7 +220,7 @@ def random_tests():
     ftps = FTPSource(cfg)
     fst = ftps.resolve_diez(cfg, "/arc/ARCHIVES/TAP2.RCV/#YYMM")
     scnd = ftps.resolve_diez(cfg, "/arc/ARCHIVES/TAP2.RCV/#YYMM/deeperdir/")
-    for i in range(10):
+    for _ in range(10):
         print(ftps.resolve_wildcards("/some/pa*/fdsa*", ".cdr"))
 
 if __name__=="__main__":
