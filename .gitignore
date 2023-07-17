@@ -182,7 +182,7 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # idea folder, uncomment if you don't need it
-# .idea
+.idea
 
 .vscode/*
 !.vscode/settings.json
@@ -196,3 +196,10 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Naming style conventions
+./**/input/*
+./**/output/*
+generate_files_for_ftp/output/*
+*.svg
+*.png
