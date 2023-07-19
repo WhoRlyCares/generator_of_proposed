@@ -8,7 +8,7 @@ def readlines_with_Fn(path: str, fn=None, merge_with=None, stripchars="\n\r", en
     ###Can read gibberish replacing broken chars with ?, unrecoverable lines reported in ./error.log
     if not os.path.isfile(path):
         raise ValueError(f"Expected file at {path}. Failed to fetch.")
-    predicate = True if fn else False
+    predicate = bool(fn)
     res_l = merge_with if merge_with else []
     with io.open(path, encoding=enc, errors='replace') as fh:
         try:
@@ -23,7 +23,7 @@ def readlines_with_Fn(path: str, fn=None, merge_with=None, stripchars="\n\r", en
         except UnicodeDecodeError as e:
             if verbose:
                 print(f"Error with decoding {path}")
-                print(str(e))
+                print(e)
             with open("./error.log", "at") as efh:
                 efh.writelines([path, str(e), '\r\n'])
     return res_l

@@ -168,7 +168,7 @@ def sftp_bruteforce(host_str="192.168.100.246", u_str="ftpuser", pswds="ftpsiu",
 
 def test_unchrooted(host_str="192.168.100.246", u_str="ftpuser", pswds="ftpsiu"):
     sftp_p = SFTPviaParamiko(host_str, u_str, pswds)
-    fl = [f for f in glob.glob("./*.svg")]
+    fl = list(glob.glob("./*.svg"))
     print(fl)
     sftp_p.adjust_files2transfer(fl)
     sftp_p.goSFTP()

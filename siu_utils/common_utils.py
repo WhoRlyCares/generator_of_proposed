@@ -16,7 +16,7 @@ class CommonNS:
         ''' Args: d target dict, k - key to paste, v -value to paste
             merge_dicts_in_place if True will merge dicts if val is dict, otherwise will create list of dicts
         '''
-        if k in d.keys():
+        if k in d:
             old_v = d.get(k)
             if type(old_v) == list:
                 old_v.append(v)
@@ -55,9 +55,7 @@ class CommonNS:
         """" In case d={**d1, **d2} not supported """
         if not isinstance(d1, dict) or not isinstance(d2, dict):
             raise TypeError(f"Tried merging {type(d1)} with {type(d2)} as dicts")
-        d = d1.copy()
-        d.update(d2)
-        return d
+        return d1 | d2
 
     @staticmethod
     def merge_lists(l1: list, l2: list) -> list:
@@ -70,10 +68,7 @@ class CommonNS:
             else:
                 return l1.append(l2)
         elif isinstance(l2, list):
-            if l1 is None:
-                return l2
-            else:
-                return l2.append(l1)
+            return l2 if l1 is None else l2.append(l1)
         elif l1 is None:
             return [l2]
         elif l2 is None:
@@ -120,7 +115,7 @@ class DateTimeHelper:
     @staticmethod
     def join_mdy_hms(mdy: str, hms: str, form="%m/%d/%Y %H:%M:%S"):
         """ IUMLOG style dateStr split (as if fetched by groupdict)-> Datetime (zoneaware from sys time)"""
-        mdyhms = mdy + " " + hms
+        mdyhms = f"{mdy} {hms}"
         return datetime.datetime.strptime(mdyhms, form)
 
     @staticmethod
