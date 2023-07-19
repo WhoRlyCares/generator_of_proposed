@@ -203,3 +203,4 @@ fabric.properties
 generate_files_for_ftp/output/*
 *.svg
 *.png
+generate_files_for_ftp/*.txt
